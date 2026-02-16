@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>Using Validators in optree</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Using Validators in optree</h1>
+
+
+
+<div id="using-validators-in-optree" class="section level1">
+<h1>Using Validators in optree</h1>
+<p>Validators are functions that check if option values are valid before
+they are set. optree provides a collection of built-in validators for
+common validation patterns, and also allows you to write custom
+validators for specialized validation logic.</p>
+<div id="why-use-validators" class="section level2">
+<h2>Why Use Validators?</h2>
+<p>Validators ensure that your options maintain internal consistency and
+meet your requirements. They:</p>
+<ul>
+<li><strong>Prevent invalid states</strong> – Catch errors early before
+invalid options propagate through your code</li>
+<li><strong>Enforce constraints</strong> – Ensure numeric values are in
+valid ranges, vectors have required lengths, etc.</li>
+<li><strong>Maintain relationships</strong> – Ensure interdependent
+options stay synchronized (e.g., x and y vectors must have equal
+length)</li>
+<li><strong>Provide clear error messages</strong> – Give users helpful
+feedback about what went wrong</li>
+</ul>
+</div>
+<div id="built-in-validators" class="section level2">
+<h2>Built-in Validators</h2>
+<p>optree provides seven ready-to-use validators:</p>
+<div id="scalar-validators" class="section level3">
+<h3>Scalar Validators</h3>
+<div id="v_numeric_scalar" class="section level4">
+<h4><code>v_numeric_scalar()</code></h4>
+<p>Validates that a value is a single numeric value (not a vector, not a
+string).</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a>validator <span class="ot">&lt;-</span> <span class="fu">v_numeric_scalar</span>()</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="fu">validator</span>(<span class="dv">42</span>)           <span class="co"># ✓ OK</span></span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a><span class="fu">validator</span>(<span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>))      <span class="co"># ✗ Error: must be a single numeric value</span></span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a><span class="fu">validator</span>(<span class="st">&quot;text&quot;</span>)       <span class="co"># ✗ Error: must be a single numeric value</span></span></code></pre></div>
+</div>
+<div id="v_logical_scalar" class="section level4">
+<h4><code>v_logical_scalar()</code></h4>
+<p>Validates that a value is a single logical value (TRUE or FALSE).</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a>validator <span class="ot">&lt;-</span> <span class="fu">v_logical_scalar</span>()</span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a><span class="fu">validator</span>(<span class="cn">TRUE</span>)         <span class="co"># ✓ OK</span></span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a><span class="fu">validator</span>(<span class="fu">c</span>(<span class="cn">TRUE</span>, <span class="cn">FALSE</span>))  <span class="co"># ✗ Error: must be a single logical value</span></span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a><span class="fu">validator</span>(<span class="dv">1</span>)            <span class="co"># ✗ Error: must be a single logical value</span></span></code></pre></div>
+</div>
+<div id="v_character_scalar" class="section level4">
+<h4><code>v_character_scalar()</code></h4>
+<p>Validates that a value is a single character string. By default,
+rejects empty strings.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>validator <span class="ot">&lt;-</span> <span class="fu">v_character_scalar</span>()</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="fu">validator</span>(<span class="st">&quot;hello&quot;</span>)      <span class="co"># ✓ OK</span></span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a><span class="fu">validator</span>(<span class="st">&quot;&quot;</span>)           <span class="co"># ✗ Error: must not be empty</span></span></code></pre></div>
+</div>
+</div>
+<div id="range-validators" class="section level3">
+<h3>Range Validators</h3>
+<div id="v_numeric_rangemin--inf-max-inf" class="section level4">
+<h4><code>v_numeric_range(min = -Inf, max = Inf)</code></h4>
+<p>Validates that a value is a single numeric value within a specified
+range (inclusive).</p>
+<p>Parameters: - <code>min</code>: Minimum allowed value (default: -Inf)
+- <code>max</code>: Maximum allowed value (default: Inf)</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="co"># Values between 0 and 1 (e.g., probability)</span></span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>validator <span class="ot">&lt;-</span> <span class="fu">v_numeric_range</span>(<span class="at">min =</span> <span class="dv">0</span>, <span class="at">max =</span> <span class="dv">1</span>)</span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a><span class="fu">validator</span>(<span class="fl">0.5</span>)          <span class="co"># ✓ OK</span></span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a><span class="fu">validator</span>(<span class="sc">-</span><span class="fl">0.1</span>)         <span class="co"># ✗ Error: must be between 0 and 1</span></span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a></span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a><span class="co"># Temperature range (Celsius)</span></span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a>validator <span class="ot">&lt;-</span> <span class="fu">v_numeric_range</span>(<span class="at">min =</span> <span class="sc">-</span><span class="dv">40</span>, <span class="at">max =</span> <span class="dv">50</span>)</span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a><span class="fu">validator</span>(<span class="sc">-</span><span class="dv">10</span>)          <span class="co"># ✓ OK</span></span></code></pre></div>
+</div>
+</div>
+<div id="vector-validators" class="section level3">
+<h3>Vector Validators</h3>
+<div id="v_numeric_vectormin_len-1-finite-true" class="section level4">
+<h4><code>v_numeric_vector(min_len = 1, finite = TRUE)</code></h4>
+<p>Validates that a value is a numeric vector with optional minimum
+length and finiteness requirements.</p>
+<p>Parameters: - <code>min_len</code>: Minimum required vector length
+(default: 1) - <code>finite</code>: If TRUE (default), rejects
+Inf/-Inf/NaN values. If FALSE, they are allowed.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="co"># Any numeric vector</span></span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>validator <span class="ot">&lt;-</span> <span class="fu">v_numeric_vector</span>()</span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="fu">validator</span>(<span class="dv">1</span>)            <span class="co"># ✓ OK</span></span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="fu">validator</span>(<span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>))   <span class="co"># ✓ OK</span></span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a></span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a><span class="co"># Vector of at least 3 elements</span></span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a>validator <span class="ot">&lt;-</span> <span class="fu">v_numeric_vector</span>(<span class="at">min_len =</span> <span class="dv">3</span>)</span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a><span class="fu">validator</span>(<span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>, <span class="dv">4</span>)) <span class="co"># ✓ OK</span></span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a><span class="fu">validator</span>(<span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>))      <span class="co"># ✗ Error: length must be &gt;= 3</span></span>
+<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a></span>
+<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a><span class="co"># Finite values only (no Inf, -Inf, NaN)</span></span>
+<span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a>validator <span class="ot">&lt;-</span> <span class="fu">v_numeric_vector</span>(<span class="at">finite =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a><span class="fu">validator</span>(<span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>))   <span class="co"># ✓ OK</span></span>
+<span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a><span class="fu">validator</span>(<span class="fu">c</span>(<span class="dv">1</span>, <span class="cn">Inf</span>, <span class="dv">3</span>)) <span class="co"># ✗ Error: must be finite</span></span></code></pre></div>
+</div>
+</div>
+<div id="choice-validators" class="section level3">
+<h3>Choice Validators</h3>
+<div id="v_enumchoices" class="section level4">
+<h4><code>v_enum(choices)</code></h4>
+<p>Validates that a value is one of a predefined set of allowed
+choices.</p>
+<p>Parameters: - <code>choices</code>: A character vector of allowed
+values</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>validator <span class="ot">&lt;-</span> <span class="fu">v_enum</span>(<span class="fu">c</span>(<span class="st">&quot;train&quot;</span>, <span class="st">&quot;test&quot;</span>, <span class="st">&quot;validation&quot;</span>))</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a><span class="fu">validator</span>(<span class="st">&quot;train&quot;</span>)      <span class="co"># ✓ OK</span></span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a><span class="fu">validator</span>(<span class="st">&quot;predict&quot;</span>)    <span class="co"># ✗ Error: must be one of: train, test, validation</span></span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a><span class="co"># Backend choices</span></span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a>validator <span class="ot">&lt;-</span> <span class="fu">v_enum</span>(<span class="fu">c</span>(<span class="st">&quot;cpu&quot;</span>, <span class="st">&quot;gpu&quot;</span>, <span class="st">&quot;tpu&quot;</span>))</span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a><span class="fu">validator</span>(<span class="st">&quot;gpu&quot;</span>)        <span class="co"># ✓ OK</span></span></code></pre></div>
+</div>
+</div>
+<div id="structured-data-validators" class="section level3">
+<h3>Structured Data Validators</h3>
+<div id="v_xypairmin_len-1" class="section level4">
+<h4><code>v_xypair(min_len = 1)</code></h4>
+<p>Validates that a value is a list with paired <code>x</code> and
+<code>y</code> components. Useful for time-series data, phenology
+parameters, or any paired numeric sequences.</p>
+<p>Parameters: - <code>min_len</code>: Minimum required length for both
+x and y vectors (default: 1)</p>
+<p>The validator checks that: - The value is a list - It has both
+<code>x</code> and <code>y</code> named elements - Neither
+<code>x</code> nor <code>y</code> is NULL - Both <code>x</code> and
+<code>y</code> are atomic vectors - Neither contains NA values - Both
+have the same length - Both are at least <code>min_len</code> long</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>validator <span class="ot">&lt;-</span> <span class="fu">v_xypair</span>()</span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a><span class="fu">validator</span>(<span class="fu">list</span>(<span class="at">x =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>), <span class="at">y =</span> <span class="fu">c</span>(<span class="dv">10</span>, <span class="dv">20</span>, <span class="dv">30</span>)))  <span class="co"># ✓ OK</span></span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>validator <span class="ot">&lt;-</span> <span class="fu">v_xypair</span>(<span class="at">min_len =</span> <span class="dv">2</span>)</span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a><span class="fu">validator</span>(<span class="fu">list</span>(<span class="at">x =</span> <span class="fu">c</span>(<span class="dv">1</span>), <span class="at">y =</span> <span class="fu">c</span>(<span class="dv">10</span>)))  <span class="co"># ✗ Error: xypair length must be &gt;= 2</span></span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a></span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a><span class="fu">validator</span>(<span class="fu">list</span>(<span class="at">x =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>), <span class="at">y =</span> <span class="fu">c</span>(<span class="dv">10</span>, <span class="dv">20</span>, <span class="dv">30</span>)))  <span class="co"># ✗ Error: different lengths</span></span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a><span class="fu">validator</span>(<span class="fu">list</span>(<span class="at">x =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>)))  <span class="co"># ✗ Error: missing y</span></span></code></pre></div>
+</div>
+</div>
+</div>
+<div id="using-validators-in-options-managers" class="section level2">
+<h2>Using Validators in Options Managers</h2>
+<p>Validators are specified when creating an options manager:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a><span class="fu">library</span>(optree)</span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a><span class="co"># Create a machine learning config manager</span></span>
+<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a>ml_config <span class="ot">&lt;-</span> <span class="fu">create_options_manager</span>(</span>
+<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a>  <span class="at">defaults =</span> <span class="fu">list</span>(</span>
+<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a>    <span class="at">model_name =</span> <span class="st">&quot;my_model&quot;</span>,</span>
+<span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a>    <span class="at">learning_rate =</span> <span class="fl">0.01</span>,</span>
+<span id="cb8-8"><a href="#cb8-8" tabindex="-1"></a>    <span class="at">batch_size =</span> <span class="dv">32</span>,</span>
+<span id="cb8-9"><a href="#cb8-9" tabindex="-1"></a>    <span class="at">backend =</span> <span class="st">&quot;cpu&quot;</span>,</span>
+<span id="cb8-10"><a href="#cb8-10" tabindex="-1"></a>    <span class="at">epochs =</span> <span class="dv">10</span>,</span>
+<span id="cb8-11"><a href="#cb8-11" tabindex="-1"></a>    <span class="at">coefficients =</span> <span class="fu">c</span>(<span class="fl">0.1</span>, <span class="fl">0.2</span>, <span class="fl">0.3</span>)</span>
+<span id="cb8-12"><a href="#cb8-12" tabindex="-1"></a>  ),</span>
+<span id="cb8-13"><a href="#cb8-13" tabindex="-1"></a>  <span class="at">validators =</span> <span class="fu">list</span>(</span>
+<span id="cb8-14"><a href="#cb8-14" tabindex="-1"></a>    <span class="st">&quot;model_name&quot;</span> <span class="ot">=</span> <span class="fu">v_character_scalar</span>(),</span>
+<span id="cb8-15"><a href="#cb8-15" tabindex="-1"></a>    <span class="st">&quot;learning_rate&quot;</span> <span class="ot">=</span> <span class="fu">v_numeric_range</span>(<span class="at">min =</span> <span class="dv">0</span>, <span class="at">max =</span> <span class="dv">1</span>),</span>
+<span id="cb8-16"><a href="#cb8-16" tabindex="-1"></a>    <span class="st">&quot;batch_size&quot;</span> <span class="ot">=</span> <span class="fu">v_numeric_scalar</span>(),</span>
+<span id="cb8-17"><a href="#cb8-17" tabindex="-1"></a>    <span class="st">&quot;backend&quot;</span> <span class="ot">=</span> <span class="fu">v_enum</span>(<span class="fu">c</span>(<span class="st">&quot;cpu&quot;</span>, <span class="st">&quot;gpu&quot;</span>, <span class="st">&quot;tpu&quot;</span>)),</span>
+<span id="cb8-18"><a href="#cb8-18" tabindex="-1"></a>    <span class="st">&quot;epochs&quot;</span> <span class="ot">=</span> <span class="fu">v_numeric_range</span>(<span class="at">min =</span> <span class="dv">1</span>, <span class="at">max =</span> <span class="dv">1000</span>),</span>
+<span id="cb8-19"><a href="#cb8-19" tabindex="-1"></a>    <span class="st">&quot;coefficients&quot;</span> <span class="ot">=</span> <span class="fu">v_numeric_vector</span>(<span class="at">min_len =</span> <span class="dv">2</span>)</span>
+<span id="cb8-20"><a href="#cb8-20" tabindex="-1"></a>  )</span>
+<span id="cb8-21"><a href="#cb8-21" tabindex="-1"></a>)</span>
+<span id="cb8-22"><a href="#cb8-22" tabindex="-1"></a></span>
+<span id="cb8-23"><a href="#cb8-23" tabindex="-1"></a><span class="co"># Valid updates work</span></span>
+<span id="cb8-24"><a href="#cb8-24" tabindex="-1"></a>ml_config<span class="sc">$</span><span class="fu">set</span>(<span class="at">learning_rate =</span> <span class="fl">0.05</span>)  <span class="co"># ✓ OK</span></span>
+<span id="cb8-25"><a href="#cb8-25" tabindex="-1"></a>ml_config<span class="sc">$</span><span class="fu">set</span>(<span class="at">backend =</span> <span class="st">&quot;gpu&quot;</span>)       <span class="co"># ✓ OK</span></span>
+<span id="cb8-26"><a href="#cb8-26" tabindex="-1"></a></span>
+<span id="cb8-27"><a href="#cb8-27" tabindex="-1"></a><span class="co"># Invalid updates fail</span></span>
+<span id="cb8-28"><a href="#cb8-28" tabindex="-1"></a>ml_config<span class="sc">$</span><span class="fu">set</span>(<span class="at">learning_rate =</span> <span class="fl">1.5</span>)   <span class="co"># ✗ Error: must be between 0 and 1</span></span>
+<span id="cb8-29"><a href="#cb8-29" tabindex="-1"></a>ml_config<span class="sc">$</span><span class="fu">set</span>(<span class="at">backend =</span> <span class="st">&quot;quantum&quot;</span>)   <span class="co"># ✗ Error: must be one of: cpu, gpu, tpu</span></span></code></pre></div>
+</div>
+<div id="validators-with-hierarchical-options" class="section level2">
+<h2>Validators with Hierarchical Options</h2>
+<p>Validators can be applied to any level of your hierarchical
+options:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a>crop_model <span class="ot">&lt;-</span> <span class="fu">create_options_manager</span>(</span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a>  <span class="at">defaults =</span> <span class="fu">list</span>(</span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a>    <span class="at">phenology =</span> <span class="fu">list</span>(</span>
+<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a>      <span class="at">thermaltime =</span> <span class="fu">list</span>(</span>
+<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a>        <span class="at">x =</span> <span class="fu">c</span>(<span class="dv">2</span>, <span class="dv">30</span>, <span class="dv">35</span>),</span>
+<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a>        <span class="at">y =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">28</span>, <span class="dv">0</span>)</span>
+<span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a>      ),</span>
+<span id="cb9-8"><a href="#cb9-8" tabindex="-1"></a>      <span class="at">photoperiod =</span> <span class="fu">list</span>(</span>
+<span id="cb9-9"><a href="#cb9-9" tabindex="-1"></a>        <span class="at">x =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>),</span>
+<span id="cb9-10"><a href="#cb9-10" tabindex="-1"></a>        <span class="at">y =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">0</span>)</span>
+<span id="cb9-11"><a href="#cb9-11" tabindex="-1"></a>      )</span>
+<span id="cb9-12"><a href="#cb9-12" tabindex="-1"></a>    ),</span>
+<span id="cb9-13"><a href="#cb9-13" tabindex="-1"></a>    <span class="at">soil =</span> <span class="fu">list</span>(</span>
+<span id="cb9-14"><a href="#cb9-14" tabindex="-1"></a>      <span class="at">ph =</span> <span class="dv">7</span>,</span>
+<span id="cb9-15"><a href="#cb9-15" tabindex="-1"></a>      <span class="at">moisture =</span> <span class="fl">0.5</span></span>
+<span id="cb9-16"><a href="#cb9-16" tabindex="-1"></a>    )</span>
+<span id="cb9-17"><a href="#cb9-17" tabindex="-1"></a>  ),</span>
+<span id="cb9-18"><a href="#cb9-18" tabindex="-1"></a>  <span class="at">validators =</span> <span class="fu">list</span>(</span>
+<span id="cb9-19"><a href="#cb9-19" tabindex="-1"></a>    <span class="co"># Validate paired data structures</span></span>
+<span id="cb9-20"><a href="#cb9-20" tabindex="-1"></a>    <span class="st">&quot;phenology.thermaltime&quot;</span> <span class="ot">=</span> <span class="fu">v_xypair</span>(<span class="at">min_len =</span> <span class="dv">3</span>),</span>
+<span id="cb9-21"><a href="#cb9-21" tabindex="-1"></a>    <span class="st">&quot;phenology.photoperiod&quot;</span> <span class="ot">=</span> <span class="fu">v_xypair</span>(<span class="at">min_len =</span> <span class="dv">3</span>),</span>
+<span id="cb9-22"><a href="#cb9-22" tabindex="-1"></a>    </span>
+<span id="cb9-23"><a href="#cb9-23" tabindex="-1"></a>    <span class="co"># Validate scalar values</span></span>
+<span id="cb9-24"><a href="#cb9-24" tabindex="-1"></a>    <span class="st">&quot;soil.ph&quot;</span> <span class="ot">=</span> <span class="fu">v_numeric_range</span>(<span class="at">min =</span> <span class="dv">4</span>, <span class="at">max =</span> <span class="dv">9</span>),</span>
+<span id="cb9-25"><a href="#cb9-25" tabindex="-1"></a>    <span class="st">&quot;soil.moisture&quot;</span> <span class="ot">=</span> <span class="fu">v_numeric_range</span>(<span class="at">min =</span> <span class="dv">0</span>, <span class="at">max =</span> <span class="dv">1</span>)</span>
+<span id="cb9-26"><a href="#cb9-26" tabindex="-1"></a>  )</span>
+<span id="cb9-27"><a href="#cb9-27" tabindex="-1"></a>)</span></code></pre></div>
+</div>
+<div id="writing-custom-validators" class="section level2">
+<h2>Writing Custom Validators</h2>
+<p>For specialized validation logic, you can write custom validators. A
+validator is simply a function that: 1. Takes a single argument (the
+value being validated) 2. Silently returns if the value is valid 3.
+Calls <code>stop()</code> with an error message if the value is
+invalid</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a><span class="co"># Custom validator: must be a positive multiple of 5</span></span>
+<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a>positive_multiple_of_5 <span class="ot">&lt;-</span> <span class="cf">function</span>(x) {</span>
+<span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span><span class="fu">is.numeric</span>(x) <span class="sc">||</span> <span class="fu">length</span>(x) <span class="sc">!=</span> <span class="dv">1</span>) {</span>
+<span id="cb10-4"><a href="#cb10-4" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">&quot;must be a single numeric value&quot;</span>, <span class="at">call. =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb10-5"><a href="#cb10-5" tabindex="-1"></a>  }</span>
+<span id="cb10-6"><a href="#cb10-6" tabindex="-1"></a>  <span class="cf">if</span> (x <span class="sc">&lt;=</span> <span class="dv">0</span>) {</span>
+<span id="cb10-7"><a href="#cb10-7" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">&quot;must be positive&quot;</span>, <span class="at">call. =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb10-8"><a href="#cb10-8" tabindex="-1"></a>  }</span>
+<span id="cb10-9"><a href="#cb10-9" tabindex="-1"></a>  <span class="cf">if</span> (x <span class="sc">%%</span> <span class="dv">5</span> <span class="sc">!=</span> <span class="dv">0</span>) {</span>
+<span id="cb10-10"><a href="#cb10-10" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">&quot;must be a multiple of 5&quot;</span>, <span class="at">call. =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb10-11"><a href="#cb10-11" tabindex="-1"></a>  }</span>
+<span id="cb10-12"><a href="#cb10-12" tabindex="-1"></a>}</span>
+<span id="cb10-13"><a href="#cb10-13" tabindex="-1"></a></span>
+<span id="cb10-14"><a href="#cb10-14" tabindex="-1"></a>my_config <span class="ot">&lt;-</span> <span class="fu">create_options_manager</span>(</span>
+<span id="cb10-15"><a href="#cb10-15" tabindex="-1"></a>  <span class="at">defaults =</span> <span class="fu">list</span>(</span>
+<span id="cb10-16"><a href="#cb10-16" tabindex="-1"></a>    <span class="at">step_size =</span> <span class="dv">5</span></span>
+<span id="cb10-17"><a href="#cb10-17" tabindex="-1"></a>  ),</span>
+<span id="cb10-18"><a href="#cb10-18" tabindex="-1"></a>  <span class="at">validators =</span> <span class="fu">list</span>(</span>
+<span id="cb10-19"><a href="#cb10-19" tabindex="-1"></a>    <span class="st">&quot;step_size&quot;</span> <span class="ot">=</span> positive_multiple_of_5</span>
+<span id="cb10-20"><a href="#cb10-20" tabindex="-1"></a>  )</span>
+<span id="cb10-21"><a href="#cb10-21" tabindex="-1"></a>)</span>
+<span id="cb10-22"><a href="#cb10-22" tabindex="-1"></a></span>
+<span id="cb10-23"><a href="#cb10-23" tabindex="-1"></a>my_config<span class="sc">$</span><span class="fu">set</span>(<span class="at">step_size =</span> <span class="dv">10</span>)  <span class="co"># ✓ OK</span></span>
+<span id="cb10-24"><a href="#cb10-24" tabindex="-1"></a>my_config<span class="sc">$</span><span class="fu">set</span>(<span class="at">step_size =</span> <span class="dv">7</span>)   <span class="co"># ✗ Error: must be a multiple of 5</span></span></code></pre></div>
+</div>
+<div id="combining-multiple-validators" class="section level2">
+<h2>Combining Multiple Validators</h2>
+<p>You can create higher-level validators by combining simpler ones and
+custom logic:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a><span class="co"># Validator factory: numeric value that must be a multiple of a given number</span></span>
+<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a>v_multiple_of <span class="ot">&lt;-</span> <span class="cf">function</span>(divisor) {</span>
+<span id="cb11-3"><a href="#cb11-3" tabindex="-1"></a>  <span class="cf">function</span>(x) {</span>
+<span id="cb11-4"><a href="#cb11-4" tabindex="-1"></a>    <span class="co"># First check it&#39;s a valid numeric scalar</span></span>
+<span id="cb11-5"><a href="#cb11-5" tabindex="-1"></a>    <span class="fu">v_numeric_scalar</span>()(x)</span>
+<span id="cb11-6"><a href="#cb11-6" tabindex="-1"></a>    </span>
+<span id="cb11-7"><a href="#cb11-7" tabindex="-1"></a>    <span class="co"># Then check it&#39;s a multiple</span></span>
+<span id="cb11-8"><a href="#cb11-8" tabindex="-1"></a>    <span class="cf">if</span> (x <span class="sc">%%</span> divisor <span class="sc">!=</span> <span class="dv">0</span>) {</span>
+<span id="cb11-9"><a href="#cb11-9" tabindex="-1"></a>      <span class="fu">stop</span>(<span class="fu">sprintf</span>(<span class="st">&quot;must be a multiple of %d&quot;</span>, divisor), <span class="at">call. =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb11-10"><a href="#cb11-10" tabindex="-1"></a>    }</span>
+<span id="cb11-11"><a href="#cb11-11" tabindex="-1"></a>  }</span>
+<span id="cb11-12"><a href="#cb11-12" tabindex="-1"></a>}</span>
+<span id="cb11-13"><a href="#cb11-13" tabindex="-1"></a></span>
+<span id="cb11-14"><a href="#cb11-14" tabindex="-1"></a>validator <span class="ot">&lt;-</span> <span class="fu">v_multiple_of</span>(<span class="dv">10</span>)</span>
+<span id="cb11-15"><a href="#cb11-15" tabindex="-1"></a><span class="fu">validator</span>(<span class="dv">50</span>)   <span class="co"># ✓ OK</span></span>
+<span id="cb11-16"><a href="#cb11-16" tabindex="-1"></a><span class="fu">validator</span>(<span class="dv">45</span>)   <span class="co"># ✗ Error: must be a multiple of 10</span></span></code></pre></div>
+</div>
+<div id="error-handling-and-transactional-safety" class="section level2">
+<h2>Error Handling and Transactional Safety</h2>
+<p>When validation fails, optree automatically rolls back any changes.
+This ensures your options manager never enters an invalid state:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a>config <span class="ot">&lt;-</span> <span class="fu">create_options_manager</span>(</span>
+<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a>  <span class="at">defaults =</span> <span class="fu">list</span>(</span>
+<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a>    <span class="at">x =</span> <span class="dv">1</span>,</span>
+<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a>    <span class="at">y =</span> <span class="dv">2</span></span>
+<span id="cb12-5"><a href="#cb12-5" tabindex="-1"></a>  ),</span>
+<span id="cb12-6"><a href="#cb12-6" tabindex="-1"></a>  <span class="at">validators =</span> <span class="fu">list</span>(</span>
+<span id="cb12-7"><a href="#cb12-7" tabindex="-1"></a>    <span class="st">&quot;x&quot;</span> <span class="ot">=</span> <span class="fu">v_numeric_range</span>(<span class="at">min =</span> <span class="dv">0</span>, <span class="at">max =</span> <span class="dv">10</span>)</span>
+<span id="cb12-8"><a href="#cb12-8" tabindex="-1"></a>  )</span>
+<span id="cb12-9"><a href="#cb12-9" tabindex="-1"></a>)</span>
+<span id="cb12-10"><a href="#cb12-10" tabindex="-1"></a></span>
+<span id="cb12-11"><a href="#cb12-11" tabindex="-1"></a><span class="co"># Valid update works</span></span>
+<span id="cb12-12"><a href="#cb12-12" tabindex="-1"></a>config<span class="sc">$</span><span class="fu">set</span>(<span class="at">x =</span> <span class="dv">5</span>)</span>
+<span id="cb12-13"><a href="#cb12-13" tabindex="-1"></a>config<span class="sc">$</span><span class="fu">get</span>(<span class="st">&quot;x&quot;</span>)  <span class="co"># Returns 5</span></span>
+<span id="cb12-14"><a href="#cb12-14" tabindex="-1"></a></span>
+<span id="cb12-15"><a href="#cb12-15" tabindex="-1"></a><span class="co"># Invalid update fails and rolls back</span></span>
+<span id="cb12-16"><a href="#cb12-16" tabindex="-1"></a><span class="fu">tryCatch</span>(</span>
+<span id="cb12-17"><a href="#cb12-17" tabindex="-1"></a>  config<span class="sc">$</span><span class="fu">set</span>(<span class="at">x =</span> <span class="dv">15</span>),  <span class="co"># Out of range</span></span>
+<span id="cb12-18"><a href="#cb12-18" tabindex="-1"></a>  <span class="at">error =</span> <span class="cf">function</span>(e) <span class="fu">cat</span>(<span class="st">&quot;Error caught:&quot;</span>, e<span class="sc">$</span>message, <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb12-19"><a href="#cb12-19" tabindex="-1"></a>)</span>
+<span id="cb12-20"><a href="#cb12-20" tabindex="-1"></a></span>
+<span id="cb12-21"><a href="#cb12-21" tabindex="-1"></a>config<span class="sc">$</span><span class="fu">get</span>(<span class="st">&quot;x&quot;</span>)  <span class="co"># Still returns 5 (rolled back)</span></span></code></pre></div>
+</div>
+<div id="summary" class="section level2">
+<h2>Summary</h2>
+<p>optree provides a comprehensive set of built-in validators for common
+validation patterns:</p>
+<table>
+<thead>
+<tr class="header">
+<th>Validator</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>v_numeric_scalar()</code></td>
+<td>Single numeric value</td>
+</tr>
+<tr class="even">
+<td><code>v_logical_scalar()</code></td>
+<td>Single logical value</td>
+</tr>
+<tr class="odd">
+<td><code>v_character_scalar()</code></td>
+<td>Single character string</td>
+</tr>
+<tr class="even">
+<td><code>v_numeric_range()</code></td>
+<td>Bounded numeric value</td>
+</tr>
+<tr class="odd">
+<td><code>v_numeric_vector()</code></td>
+<td>Numeric vector with constraints</td>
+</tr>
+<tr class="even">
+<td><code>v_enum()</code></td>
+<td>One of predefined choices</td>
+</tr>
+<tr class="odd">
+<td><code>v_xypair()</code></td>
+<td>Paired x/y data structures</td>
+</tr>
+</tbody>
+</table>
+<p>For more information, see the <a href="https://optree.bangyou.me/reference/">function documentation</a>
+or create custom validators for your specific needs.</p>
+</div>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

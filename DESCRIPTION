@@ -1,0 +1,26 @@
+Package: optree
+Title: Hierarchical Runtime Configuration Management
+Version: 0.1.0
+Authors@R: 
+    person("Bangou", "Zheng", , "zheng.bangyou@gmail.com", role = c("aut", "cre"))
+Description: Provides tools for managing nested, multi-level configuration systems with
+    runtime mutability, type validation, and default value management. Supports creating
+    hierarchical options managers with customizable validators for scalar and vector types
+    (numeric, character, logical), enumerated values, bounded ranges, and complex structures
+    like XY pairs. Options can be dynamically modified at runtime while maintaining type
+    safety through validator functions, and easily reset to their default values when needed.
+License: MIT + file LICENSE
+Encoding: UTF-8
+RoxygenNote: 7.3.3
+Depends: R (>= 4.1.0)
+Suggests: testthat (>= 3.0.0), knitr, rmarkdown
+VignetteBuilder: knitr
+Config/testthat/edition: 3
+URL: https://optree.bangyou.me/, https://github.com/byzheng/optree
+BugReports: https://github.com/byzheng/optree/issues
+NeedsCompilation: no
+Packaged: 2026-02-11 23:24:23 UTC; zhe00a
+Author: Bangou Zheng [aut, cre]
+Maintainer: Bangou Zheng <zheng.bangyou@gmail.com>
+Repository: CRAN
+Date/Publication: 2026-02-16 17:20:07 UTC

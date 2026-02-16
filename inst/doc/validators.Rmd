@@ -1,0 +1,327 @@
+---
+title: "Using Validators in optree"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Using Validators in optree}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+# Using Validators in optree
+
+Validators are functions that check if option values are valid before they are set. optree provides a collection of built-in validators for common validation patterns, and also allows you to write custom validators for specialized validation logic.
+
+## Why Use Validators?
+
+Validators ensure that your options maintain internal consistency and meet your requirements. They:
+
+- **Prevent invalid states** – Catch errors early before invalid options propagate through your code
+- **Enforce constraints** – Ensure numeric values are in valid ranges, vectors have required lengths, etc.
+- **Maintain relationships** – Ensure interdependent options stay synchronized (e.g., x and y vectors must have equal length)
+- **Provide clear error messages** – Give users helpful feedback about what went wrong
+
+## Built-in Validators
+
+optree provides seven ready-to-use validators:
+
+### Scalar Validators
+
+#### `v_numeric_scalar()`
+Validates that a value is a single numeric value (not a vector, not a string).
+
+```{r, eval=FALSE}
+validator <- v_numeric_scalar()
+validator(42)           # ✓ OK
+validator(c(1, 2))      # ✗ Error: must be a single numeric value
+validator("text")       # ✗ Error: must be a single numeric value
+```
+
+#### `v_logical_scalar()`
+Validates that a value is a single logical value (TRUE or FALSE).
+
+```{r, eval=FALSE}
+validator <- v_logical_scalar()
+validator(TRUE)         # ✓ OK
+validator(c(TRUE, FALSE))  # ✗ Error: must be a single logical value
+validator(1)            # ✗ Error: must be a single logical value
+```
+
+#### `v_character_scalar()`
+Validates that a value is a single character string. By default, rejects empty strings.
+
+
+```{r, eval=FALSE}
+validator <- v_character_scalar()
+validator("hello")      # ✓ OK
+validator("")           # ✗ Error: must not be empty
+```
+
+### Range Validators
+
+#### `v_numeric_range(min = -Inf, max = Inf)`
+Validates that a value is a single numeric value within a specified range (inclusive).
+
+Parameters:
+- `min`: Minimum allowed value (default: -Inf)
+- `max`: Maximum allowed value (default: Inf)
+
+```{r, eval=FALSE}
+# Values between 0 and 1 (e.g., probability)
+validator <- v_numeric_range(min = 0, max = 1)
+validator(0.5)          # ✓ OK
+validator(-0.1)         # ✗ Error: must be between 0 and 1
+
+# Temperature range (Celsius)
+validator <- v_numeric_range(min = -40, max = 50)
+validator(-10)          # ✓ OK
+```
+
+### Vector Validators
+
+#### `v_numeric_vector(min_len = 1, finite = TRUE)`
+Validates that a value is a numeric vector with optional minimum length and finiteness requirements.
+
+Parameters:
+- `min_len`: Minimum required vector length (default: 1)
+- `finite`: If TRUE (default), rejects Inf/-Inf/NaN values. If FALSE, they are allowed.
+
+```{r, eval=FALSE}
+# Any numeric vector
+validator <- v_numeric_vector()
+validator(1)            # ✓ OK
+validator(c(1, 2, 3))   # ✓ OK
+
+# Vector of at least 3 elements
+validator <- v_numeric_vector(min_len = 3)
+validator(c(1, 2, 3, 4)) # ✓ OK
+validator(c(1, 2))      # ✗ Error: length must be >= 3
+
+# Finite values only (no Inf, -Inf, NaN)
+validator <- v_numeric_vector(finite = TRUE)
+validator(c(1, 2, 3))   # ✓ OK
+validator(c(1, Inf, 3)) # ✗ Error: must be finite
+```
+
+### Choice Validators
+
+#### `v_enum(choices)`
+Validates that a value is one of a predefined set of allowed choices.
+
+Parameters:
+- `choices`: A character vector of allowed values
+
+```{r, eval=FALSE}
+validator <- v_enum(c("train", "test", "validation"))
+validator("train")      # ✓ OK
+validator("predict")    # ✗ Error: must be one of: train, test, validation
+
+# Backend choices
+validator <- v_enum(c("cpu", "gpu", "tpu"))
+validator("gpu")        # ✓ OK
+```
+
+### Structured Data Validators
+
+#### `v_xypair(min_len = 1)`
+Validates that a value is a list with paired `x` and `y` components. Useful for time-series data, phenology parameters, or any paired numeric sequences.
+
+Parameters:
+- `min_len`: Minimum required length for both x and y vectors (default: 1)
+
+The validator checks that:
+- The value is a list
+- It has both `x` and `y` named elements
+- Neither `x` nor `y` is NULL
+- Both `x` and `y` are atomic vectors
+- Neither contains NA values
+- Both have the same length
+- Both are at least `min_len` long
+
+```{r, eval=FALSE}
+validator <- v_xypair()
+validator(list(x = c(1, 2, 3), y = c(10, 20, 30)))  # ✓ OK
+
+validator <- v_xypair(min_len = 2)
+validator(list(x = c(1), y = c(10)))  # ✗ Error: xypair length must be >= 2
+
+validator(list(x = c(1, 2), y = c(10, 20, 30)))  # ✗ Error: different lengths
+validator(list(x = c(1, 2)))  # ✗ Error: missing y
+```
+
+## Using Validators in Options Managers
+
+Validators are specified when creating an options manager:
+
+```{r, eval=FALSE}
+library(optree)
+
+# Create a machine learning config manager
+ml_config <- create_options_manager(
+  defaults = list(
+    model_name = "my_model",
+    learning_rate = 0.01,
+    batch_size = 32,
+    backend = "cpu",
+    epochs = 10,
+    coefficients = c(0.1, 0.2, 0.3)
+  ),
+  validators = list(
+    "model_name" = v_character_scalar(),
+    "learning_rate" = v_numeric_range(min = 0, max = 1),
+    "batch_size" = v_numeric_scalar(),
+    "backend" = v_enum(c("cpu", "gpu", "tpu")),
+    "epochs" = v_numeric_range(min = 1, max = 1000),
+    "coefficients" = v_numeric_vector(min_len = 2)
+  )
+)
+
+# Valid updates work
+ml_config$set(learning_rate = 0.05)  # ✓ OK
+ml_config$set(backend = "gpu")       # ✓ OK
+
+# Invalid updates fail
+ml_config$set(learning_rate = 1.5)   # ✗ Error: must be between 0 and 1
+ml_config$set(backend = "quantum")   # ✗ Error: must be one of: cpu, gpu, tpu
+```
+
+## Validators with Hierarchical Options
+
+Validators can be applied to any level of your hierarchical options:
+
+```{r, eval=FALSE}
+crop_model <- create_options_manager(
+  defaults = list(
+    phenology = list(
+      thermaltime = list(
+        x = c(2, 30, 35),
+        y = c(0, 28, 0)
+      ),
+      photoperiod = list(
+        x = c(1, 2, 3),
+        y = c(0, 1, 0)
+      )
+    ),
+    soil = list(
+      ph = 7,
+      moisture = 0.5
+    )
+  ),
+  validators = list(
+    # Validate paired data structures
+    "phenology.thermaltime" = v_xypair(min_len = 3),
+    "phenology.photoperiod" = v_xypair(min_len = 3),
+    
+    # Validate scalar values
+    "soil.ph" = v_numeric_range(min = 4, max = 9),
+    "soil.moisture" = v_numeric_range(min = 0, max = 1)
+  )
+)
+```
+
+## Writing Custom Validators
+
+For specialized validation logic, you can write custom validators. A validator is simply a function that:
+1. Takes a single argument (the value being validated)
+2. Silently returns if the value is valid
+3. Calls `stop()` with an error message if the value is invalid
+
+```{r, eval=FALSE}
+# Custom validator: must be a positive multiple of 5
+positive_multiple_of_5 <- function(x) {
+  if (!is.numeric(x) || length(x) != 1) {
+    stop("must be a single numeric value", call. = FALSE)
+  }
+  if (x <= 0) {
+    stop("must be positive", call. = FALSE)
+  }
+  if (x %% 5 != 0) {
+    stop("must be a multiple of 5", call. = FALSE)
+  }
+}
+
+my_config <- create_options_manager(
+  defaults = list(
+    step_size = 5
+  ),
+  validators = list(
+    "step_size" = positive_multiple_of_5
+  )
+)
+
+my_config$set(step_size = 10)  # ✓ OK
+my_config$set(step_size = 7)   # ✗ Error: must be a multiple of 5
+```
+
+## Combining Multiple Validators
+
+You can create higher-level validators by combining simpler ones and custom logic:
+
+```{r, eval=FALSE}
+# Validator factory: numeric value that must be a multiple of a given number
+v_multiple_of <- function(divisor) {
+  function(x) {
+    # First check it's a valid numeric scalar
+    v_numeric_scalar()(x)
+    
+    # Then check it's a multiple
+    if (x %% divisor != 0) {
+      stop(sprintf("must be a multiple of %d", divisor), call. = FALSE)
+    }
+  }
+}
+
+validator <- v_multiple_of(10)
+validator(50)   # ✓ OK
+validator(45)   # ✗ Error: must be a multiple of 10
+```
+
+## Error Handling and Transactional Safety
+
+When validation fails, optree automatically rolls back any changes. This ensures your options manager never enters an invalid state:
+
+```{r, eval=FALSE}
+config <- create_options_manager(
+  defaults = list(
+    x = 1,
+    y = 2
+  ),
+  validators = list(
+    "x" = v_numeric_range(min = 0, max = 10)
+  )
+)
+
+# Valid update works
+config$set(x = 5)
+config$get("x")  # Returns 5
+
+# Invalid update fails and rolls back
+tryCatch(
+  config$set(x = 15),  # Out of range
+  error = function(e) cat("Error caught:", e$message, "\n")
+)
+
+config$get("x")  # Still returns 5 (rolled back)
+```
+
+## Summary
+
+optree provides a comprehensive set of built-in validators for common validation patterns:
+
+| Validator | Purpose |
+|-----------|---------|
+| `v_numeric_scalar()` | Single numeric value |
+| `v_logical_scalar()` | Single logical value |
+| `v_character_scalar()` | Single character string |
+| `v_numeric_range()` | Bounded numeric value |
+| `v_numeric_vector()` | Numeric vector with constraints |
+| `v_enum()` | One of predefined choices |
+| `v_xypair()` | Paired x/y data structures |
+
+For more information, see the [function documentation](https://optree.bangyou.me/reference/) or create custom validators for your specific needs.
