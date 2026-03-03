@@ -46,6 +46,10 @@ knitr::opts_chunk$set(
 # validator <- v_numeric_vector(finite = TRUE)
 # validator(c(1, 2, 3))   # ✓ OK
 # validator(c(1, Inf, 3)) # ✗ Error: must be finite
+# 
+# # Invalid validator arguments
+# v_numeric_vector(min_len = 1.5) # ✗ Error: min_len must be a single non-negative whole number
+# v_numeric_vector(finite = NA)   # ✗ Error: finite must be a single logical value
 
 ## ----eval=FALSE---------------------------------------------------------------
 # validator <- v_enum(c("train", "test", "validation"))
@@ -62,6 +66,13 @@ knitr::opts_chunk$set(
 # 
 # validator <- v_xypair(min_len = 2)
 # validator(list(x = c(1), y = c(10)))  # ✗ Error: xypair length must be >= 2
+# 
+# validator <- v_xypair(min_len = 2, max_len = 3)
+# validator(list(x = c(1, 2, 3), y = c(10, 20, 30))) # ✓ OK
+# validator(list(x = c(1, 2, 3, 4), y = c(10, 20, 30, 40))) # ✗ Error: xypair length must be <= 3
+# 
+# # Invalid validator arguments
+# v_xypair(min_len = 4, max_len = 2) # ✗ Error: max_len must be greater than or equal to min_len
 # 
 # validator(list(x = c(1, 2), y = c(10, 20, 30)))  # ✗ Error: different lengths
 # validator(list(x = c(1, 2)))  # ✗ Error: missing y

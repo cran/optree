@@ -4,11 +4,14 @@
 \alias{v_xypair}
 \title{Validator for XY Pair Lists}
 \usage{
-v_xypair(min_len = 1)
+v_xypair(min_len = 1, max_len = NULL)
 }
 \arguments{
 \item{min_len}{Minimum length required for the \code{x} and \code{y} vectors.
 Defaults to 1.}
+
+\item{max_len}{Maximum length allowed for the \code{x} and \code{y} vectors.
+Defaults to \code{NULL} (no upper bound).}
 }
 \value{
 A validator function that takes a value (typically a list with \code{x}
@@ -21,6 +24,7 @@ and \code{y} components) and raises an error if:
 \item Either \code{x} or \code{y} contains NA values
 \item The \code{x} and \code{y} vectors have different lengths
 \item The vectors are shorter than \code{min_len}
+\item The vectors are longer than \code{max_len} (when \code{max_len} is not \code{NULL})
 }
 }
 \description{

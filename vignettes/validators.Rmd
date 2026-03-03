@@ -92,6 +92,10 @@ Parameters:
 - `min_len`: Minimum required vector length (default: 1)
 - `finite`: If TRUE (default), rejects Inf/-Inf/NaN values. If FALSE, they are allowed.
 
+Argument rules:
+- `min_len` must be a single non-negative whole number.
+- `finite` must be a single logical value (`TRUE` or `FALSE`).
+
 ```{r, eval=FALSE}
 # Any numeric vector
 validator <- v_numeric_vector()
@@ -107,6 +111,10 @@ validator(c(1, 2))      # ✗ Error: length must be >= 3
 validator <- v_numeric_vector(finite = TRUE)
 validator(c(1, 2, 3))   # ✓ OK
 validator(c(1, Inf, 3)) # ✗ Error: must be finite
+
+# Invalid validator arguments
+v_numeric_vector(min_len = 1.5) # ✗ Error: min_len must be a single non-negative whole number
+v_numeric_vector(finite = NA)   # ✗ Error: finite must be a single logical value
 ```
 
 ### Choice Validators
@@ -129,11 +137,17 @@ validator("gpu")        # ✓ OK
 
 ### Structured Data Validators
 
-#### `v_xypair(min_len = 1)`
+#### `v_xypair(min_len = 1, max_len = NULL)`
 Validates that a value is a list with paired `x` and `y` components. Useful for time-series data, phenology parameters, or any paired numeric sequences.
 
 Parameters:
 - `min_len`: Minimum required length for both x and y vectors (default: 1)
+- `max_len`: Maximum allowed length for both x and y vectors (default: `NULL`, no upper bound)
+
+Argument rules:
+- `min_len` must be a single non-negative whole number.
+- `max_len` must be `NULL` or a single non-negative whole number.
+- If `max_len` is set, it must be greater than or equal to `min_len`.
 
 The validator checks that:
 - The value is a list
@@ -143,6 +157,7 @@ The validator checks that:
 - Neither contains NA values
 - Both have the same length
 - Both are at least `min_len` long
+- Both are at most `max_len` long (when `max_len` is provided)
 
 ```{r, eval=FALSE}
 validator <- v_xypair()
@@ -150,6 +165,13 @@ validator(list(x = c(1, 2, 3), y = c(10, 20, 30)))  # ✓ OK
 
 validator <- v_xypair(min_len = 2)
 validator(list(x = c(1), y = c(10)))  # ✗ Error: xypair length must be >= 2
+
+validator <- v_xypair(min_len = 2, max_len = 3)
+validator(list(x = c(1, 2, 3), y = c(10, 20, 30))) # ✓ OK
+validator(list(x = c(1, 2, 3, 4), y = c(10, 20, 30, 40))) # ✗ Error: xypair length must be <= 3
+
+# Invalid validator arguments
+v_xypair(min_len = 4, max_len = 2) # ✗ Error: max_len must be greater than or equal to min_len
 
 validator(list(x = c(1, 2), y = c(10, 20, 30)))  # ✗ Error: different lengths
 validator(list(x = c(1, 2)))  # ✗ Error: missing y

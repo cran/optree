@@ -1,6 +1,6 @@
 Package: optree
 Title: Hierarchical Runtime Configuration Management
-Version: 0.1.0
+Version: 0.1.1
 Authors@R: 
     person("Bangou", "Zheng", , "zheng.bangyou@gmail.com", role = c("aut", "cre"))
 Description: Provides tools for managing nested, multi-level configuration systems with
@@ -19,8 +19,8 @@ Config/testthat/edition: 3
 URL: https://optree.bangyou.me/, https://github.com/byzheng/optree
 BugReports: https://github.com/byzheng/optree/issues
 NeedsCompilation: no
-Packaged: 2026-02-11 23:24:23 UTC; zhe00a
+Packaged: 2026-03-03 00:28:43 UTC; zhe00a
 Author: Bangou Zheng [aut, cre]
 Maintainer: Bangou Zheng <zheng.bangyou@gmail.com>
 Repository: CRAN
-Date/Publication: 2026-02-16 17:20:07 UTC
+Date/Publication: 2026-03-03 00:50:02 UTC

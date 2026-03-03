@@ -421,6 +421,9 @@ length and finiteness requirements.</p>
 <p>Parameters: - <code>min_len</code>: Minimum required vector length
 (default: 1) - <code>finite</code>: If TRUE (default), rejects
 Inf/-Inf/NaN values. If FALSE, they are allowed.</p>
+<p>Argument rules: - <code>min_len</code> must be a single non-negative
+whole number. - <code>finite</code> must be a single logical value
+(<code>TRUE</code> or <code>FALSE</code>).</p>
 <div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="co"># Any numeric vector</span></span>
 <span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>validator <span class="ot">&lt;-</span> <span class="fu">v_numeric_vector</span>()</span>
 <span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="fu">validator</span>(<span class="dv">1</span>)            <span class="co"># ✓ OK</span></span>
@@ -434,7 +437,11 @@ Inf/-Inf/NaN values. If FALSE, they are allowed.</p>
 <span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a><span class="co"># Finite values only (no Inf, -Inf, NaN)</span></span>
 <span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a>validator <span class="ot">&lt;-</span> <span class="fu">v_numeric_vector</span>(<span class="at">finite =</span> <span class="cn">TRUE</span>)</span>
 <span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a><span class="fu">validator</span>(<span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>))   <span class="co"># ✓ OK</span></span>
-<span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a><span class="fu">validator</span>(<span class="fu">c</span>(<span class="dv">1</span>, <span class="cn">Inf</span>, <span class="dv">3</span>)) <span class="co"># ✗ Error: must be finite</span></span></code></pre></div>
+<span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a><span class="fu">validator</span>(<span class="fu">c</span>(<span class="dv">1</span>, <span class="cn">Inf</span>, <span class="dv">3</span>)) <span class="co"># ✗ Error: must be finite</span></span>
+<span id="cb5-15"><a href="#cb5-15" tabindex="-1"></a></span>
+<span id="cb5-16"><a href="#cb5-16" tabindex="-1"></a><span class="co"># Invalid validator arguments</span></span>
+<span id="cb5-17"><a href="#cb5-17" tabindex="-1"></a><span class="fu">v_numeric_vector</span>(<span class="at">min_len =</span> <span class="fl">1.5</span>) <span class="co"># ✗ Error: min_len must be a single non-negative whole number</span></span>
+<span id="cb5-18"><a href="#cb5-18" tabindex="-1"></a><span class="fu">v_numeric_vector</span>(<span class="at">finite =</span> <span class="cn">NA</span>)   <span class="co"># ✗ Error: finite must be a single logical value</span></span></code></pre></div>
 </div>
 </div>
 <div id="choice-validators" class="section level3">
@@ -456,26 +463,41 @@ values</p>
 </div>
 <div id="structured-data-validators" class="section level3">
 <h3>Structured Data Validators</h3>
-<div id="v_xypairmin_len-1" class="section level4">
-<h4><code>v_xypair(min_len = 1)</code></h4>
+<div id="v_xypairmin_len-1-max_len-null" class="section level4">
+<h4><code>v_xypair(min_len = 1, max_len = NULL)</code></h4>
 <p>Validates that a value is a list with paired <code>x</code> and
 <code>y</code> components. Useful for time-series data, phenology
 parameters, or any paired numeric sequences.</p>
 <p>Parameters: - <code>min_len</code>: Minimum required length for both
-x and y vectors (default: 1)</p>
+x and y vectors (default: 1) - <code>max_len</code>: Maximum allowed
+length for both x and y vectors (default: <code>NULL</code>, no upper
+bound)</p>
+<p>Argument rules: - <code>min_len</code> must be a single non-negative
+whole number. - <code>max_len</code> must be <code>NULL</code> or a
+single non-negative whole number. - If <code>max_len</code> is set, it
+must be greater than or equal to <code>min_len</code>.</p>
 <p>The validator checks that: - The value is a list - It has both
 <code>x</code> and <code>y</code> named elements - Neither
 <code>x</code> nor <code>y</code> is NULL - Both <code>x</code> and
 <code>y</code> are atomic vectors - Neither contains NA values - Both
-have the same length - Both are at least <code>min_len</code> long</p>
+have the same length - Both are at least <code>min_len</code> long -
+Both are at most <code>max_len</code> long (when <code>max_len</code> is
+provided)</p>
 <div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>validator <span class="ot">&lt;-</span> <span class="fu">v_xypair</span>()</span>
 <span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a><span class="fu">validator</span>(<span class="fu">list</span>(<span class="at">x =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>), <span class="at">y =</span> <span class="fu">c</span>(<span class="dv">10</span>, <span class="dv">20</span>, <span class="dv">30</span>)))  <span class="co"># ✓ OK</span></span>
 <span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a></span>
 <span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>validator <span class="ot">&lt;-</span> <span class="fu">v_xypair</span>(<span class="at">min_len =</span> <span class="dv">2</span>)</span>
 <span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a><span class="fu">validator</span>(<span class="fu">list</span>(<span class="at">x =</span> <span class="fu">c</span>(<span class="dv">1</span>), <span class="at">y =</span> <span class="fu">c</span>(<span class="dv">10</span>)))  <span class="co"># ✗ Error: xypair length must be &gt;= 2</span></span>
 <span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a></span>
-<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a><span class="fu">validator</span>(<span class="fu">list</span>(<span class="at">x =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>), <span class="at">y =</span> <span class="fu">c</span>(<span class="dv">10</span>, <span class="dv">20</span>, <span class="dv">30</span>)))  <span class="co"># ✗ Error: different lengths</span></span>
-<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a><span class="fu">validator</span>(<span class="fu">list</span>(<span class="at">x =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>)))  <span class="co"># ✗ Error: missing y</span></span></code></pre></div>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a>validator <span class="ot">&lt;-</span> <span class="fu">v_xypair</span>(<span class="at">min_len =</span> <span class="dv">2</span>, <span class="at">max_len =</span> <span class="dv">3</span>)</span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a><span class="fu">validator</span>(<span class="fu">list</span>(<span class="at">x =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>), <span class="at">y =</span> <span class="fu">c</span>(<span class="dv">10</span>, <span class="dv">20</span>, <span class="dv">30</span>))) <span class="co"># ✓ OK</span></span>
+<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a><span class="fu">validator</span>(<span class="fu">list</span>(<span class="at">x =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>, <span class="dv">4</span>), <span class="at">y =</span> <span class="fu">c</span>(<span class="dv">10</span>, <span class="dv">20</span>, <span class="dv">30</span>, <span class="dv">40</span>))) <span class="co"># ✗ Error: xypair length must be &lt;= 3</span></span>
+<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a></span>
+<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a><span class="co"># Invalid validator arguments</span></span>
+<span id="cb7-12"><a href="#cb7-12" tabindex="-1"></a><span class="fu">v_xypair</span>(<span class="at">min_len =</span> <span class="dv">4</span>, <span class="at">max_len =</span> <span class="dv">2</span>) <span class="co"># ✗ Error: max_len must be greater than or equal to min_len</span></span>
+<span id="cb7-13"><a href="#cb7-13" tabindex="-1"></a></span>
+<span id="cb7-14"><a href="#cb7-14" tabindex="-1"></a><span class="fu">validator</span>(<span class="fu">list</span>(<span class="at">x =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>), <span class="at">y =</span> <span class="fu">c</span>(<span class="dv">10</span>, <span class="dv">20</span>, <span class="dv">30</span>)))  <span class="co"># ✗ Error: different lengths</span></span>
+<span id="cb7-15"><a href="#cb7-15" tabindex="-1"></a><span class="fu">validator</span>(<span class="fu">list</span>(<span class="at">x =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>)))  <span class="co"># ✗ Error: missing y</span></span></code></pre></div>
 </div>
 </div>
 </div>

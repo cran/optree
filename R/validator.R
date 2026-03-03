@@ -203,6 +203,14 @@ v_enum <- function(choices) {
 #' try(validator(c(1, Inf, 3)))  # contains non-finite value
 #' try(validator("not numeric"))  # not numeric
 v_numeric_vector <- function(min_len = 1, finite = TRUE) {
+    if (!is.numeric(min_len) || length(min_len) != 1L || is.na(min_len) || !is.finite(min_len) || min_len < 0 || min_len %% 1 != 0) {
+        stop("min_len must be a single non-negative whole number", call. = FALSE)
+    }
+
+    if (!is.logical(finite) || length(finite) != 1L || is.na(finite)) {
+        stop("finite must be a single logical value", call. = FALSE)
+    }
+
     function(x) {
         if (!is.numeric(x)) {
             stop("must be numeric", call. = FALSE)
@@ -228,6 +236,8 @@ v_numeric_vector <- function(min_len = 1, finite = TRUE) {
 #'
 #' @param min_len Minimum length required for the `x` and `y` vectors.
 #'   Defaults to 1.
+#' @param max_len Maximum length allowed for the `x` and `y` vectors.
+#'   Defaults to `NULL` (no upper bound).
 #'
 #' @return A validator function that takes a value (typically a list with `x`
 #'   and `y` components) and raises an error if:
@@ -238,6 +248,7 @@ v_numeric_vector <- function(min_len = 1, finite = TRUE) {
 #'   - Either `x` or `y` contains NA values
 #'   - The `x` and `y` vectors have different lengths
 #'   - The vectors are shorter than `min_len`
+#'   - The vectors are longer than `max_len` (when `max_len` is not `NULL`)
 #'
 #' @export
 #'
@@ -253,7 +264,19 @@ v_numeric_vector <- function(min_len = 1, finite = TRUE) {
 #' try(validator(list(x = c(1, 2), y = c(10, 20, 30)))) # different lengths
 #' try(validator(list(x = c(1, NA), y = c(10, 20)))) # contains NA
 #' try(validator(list(x = c(1, 2)))) # missing y
-v_xypair <- function(min_len = 1) {
+v_xypair <- function(min_len = 1, max_len = NULL) {
+    if (!is.numeric(min_len) || length(min_len) != 1L || is.na(min_len) || !is.finite(min_len) || min_len < 0 || min_len %% 1 != 0) {
+        stop("min_len must be a single non-negative whole number", call. = FALSE)
+    }
+
+    if (!is.null(max_len) && (!is.numeric(max_len) || length(max_len) != 1L || is.na(max_len) || !is.finite(max_len) || max_len < 0 || max_len %% 1 != 0)) {
+        stop("max_len must be NULL or a single non-negative whole number", call. = FALSE)
+    }
+
+    if (!is.null(max_len) && max_len < min_len) {
+        stop("max_len must be greater than or equal to min_len", call. = FALSE)
+    }
+
     function(value) {
         if (!is.list(value)) {
             stop("xypair must be a list", call. = FALSE)
@@ -284,6 +307,10 @@ v_xypair <- function(min_len = 1) {
 
         if (length(x) < min_len) {
             stop(sprintf("xypair length must be >= %d", min_len), call. = FALSE)
+        }
+
+        if (!is.null(max_len) && length(x) > max_len) {
+            stop(sprintf("xypair length must be <= %d", max_len), call. = FALSE)
         }
     }
 }

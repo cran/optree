@@ -142,6 +142,47 @@ test_that("v_xypair enforces minimum length", {
     expect_silent(validator(list(x = c(2, 30, 35), y = c(0, 28, 0))))
 })
 
+test_that("v_xypair enforces maximum length", {
+    validator <- v_xypair(max_len = 2)
+
+    # Too long
+    expect_error(
+        validator(list(x = c(2, 30, 35), y = c(0, 28, 0))),
+        "xypair length must be <= 2"
+    )
+
+    # Valid length
+    expect_silent(validator(list(x = c(2, 30), y = c(0, 28))))
+})
+
+test_that("v_xypair uses no upper bound when max_len is NULL", {
+    validator <- v_xypair(min_len = 1)
+    expect_silent(validator(list(x = 1:100, y = 101:200)))
+})
+
+test_that("v_xypair validates min_len and max_len arguments", {
+    expect_error(
+        v_xypair(min_len = -1),
+        "min_len must be a single non-negative whole number"
+    )
+    expect_error(
+        v_xypair(min_len = 1.5),
+        "min_len must be a single non-negative whole number"
+    )
+    expect_error(
+        v_xypair(max_len = -1),
+        "max_len must be NULL or a single non-negative whole number"
+    )
+    expect_error(
+        v_xypair(max_len = 1.5),
+        "max_len must be NULL or a single non-negative whole number"
+    )
+    expect_error(
+        v_xypair(min_len = 3, max_len = 2),
+        "max_len must be greater than or equal to min_len"
+    )
+})
+
 test_that("v_xypair requires matching x and y lengths", {
     validator <- v_xypair()
     expect_error(
@@ -471,6 +512,33 @@ test_that("v_numeric_vector still rejects NA when finite = FALSE", {
     expect_error(
         validator(c(1, NA, Inf)),
         "must not contain NA"
+    )
+})
+
+test_that("v_numeric_vector validates min_len and finite arguments", {
+    expect_error(
+        v_numeric_vector(min_len = -1),
+        "min_len must be a single non-negative whole number"
+    )
+    expect_error(
+        v_numeric_vector(min_len = 1.5),
+        "min_len must be a single non-negative whole number"
+    )
+    expect_error(
+        v_numeric_vector(min_len = Inf),
+        "min_len must be a single non-negative whole number"
+    )
+    expect_error(
+        v_numeric_vector(finite = c(TRUE, FALSE)),
+        "finite must be a single logical value"
+    )
+    expect_error(
+        v_numeric_vector(finite = NA),
+        "finite must be a single logical value"
+    )
+    expect_error(
+        v_numeric_vector(finite = 1),
+        "finite must be a single logical value"
     )
 })
 
