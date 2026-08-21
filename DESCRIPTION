@@ -1,8 +1,8 @@
 Package: optree
 Title: Hierarchical Runtime Configuration Management
-Version: 0.1.1
+Version: 0.1.2
 Authors@R: 
-    person("Bangou", "Zheng", , "zheng.bangyou@gmail.com", role = c("aut", "cre"))
+    person("Bangyou", "Zheng", email = "zheng.bangyou@gmail.com", role = c("aut", "cre"))
 Description: Provides tools for managing nested, multi-level configuration systems with
     runtime mutability, type validation, and default value management. Supports creating
     hierarchical options managers with customizable validators for scalar and vector types
@@ -19,8 +19,8 @@ Config/testthat/edition: 3
 URL: https://optree.bangyou.me/, https://github.com/byzheng/optree
 BugReports: https://github.com/byzheng/optree/issues
 NeedsCompilation: no
-Packaged: 2026-03-03 00:28:43 UTC; zhe00a
-Author: Bangou Zheng [aut, cre]
-Maintainer: Bangou Zheng <zheng.bangyou@gmail.com>
+Packaged: 2026-08-20 21:34:47 UTC; zhe00a
+Author: Bangyou Zheng [aut, cre]
+Maintainer: Bangyou Zheng <zheng.bangyou@gmail.com>
 Repository: CRAN
-Date/Publication: 2026-03-03 00:50:02 UTC
+Date/Publication: 2026-08-21 12:40:14 UTC
