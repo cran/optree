@@ -1,8 +1,8 @@
-d618c641de3d6a142163e367975b78a6 *DESCRIPTION
+7dbb8c892c259f19be52c5144e454269 *DESCRIPTION
 2ea7e07e4f644b46e477865f0f28b759 *LICENSE
-8e8cb1795403fedabbfc5a7d44a2c7dc *NAMESPACE
+d00e9aa5591acd89dea4cc2e3fbda40b *NAMESPACE
 da157e06f3efb71dd07b3090fd248fef *R/options.R
-3ec4df186a877c6ae40d3071a2c4a6bc *R/validator.R
+5bf9cfbdd6a71bff5a095be0403c9bb4 *R/validator.R
 6f573ca1cbadcd74dbbc6d5bb30d2d4e *README.md
 401bbda0839504d26a7e2a9e500b1c69 *build/vignette.rds
 96d1a28eb44047766edd3bed34fb78c2 *inst/doc/validators.R
@@ -10,6 +10,7 @@ af6aafa67e59cb6c58c2018a2336b30b *inst/doc/validators.Rmd
 861c4050c53cd14710ce763789ab3837 *inst/doc/validators.html
 8a901b61c59346d0bd61dc6e60746602 *man/create_options_manager.Rd
 8e36410927463ee0ebc9a7f395620ea0 *man/v_character_scalar.Rd
+599b6822bd305cecdc54af5ed389271b *man/v_character_vector.Rd
 a2bbb4c88aab7c5c5aef60cbe2a5f56f *man/v_enum.Rd
 b4930e8981eadad6268e3ffb50c2dfee *man/v_logical_scalar.Rd
 f9e0bdc0655f32e8c1f1d55a260d7b98 *man/v_numeric_range.Rd
@@ -18,5 +19,5 @@ eb5377987cbaff33a471e1c676aafc8e *man/v_numeric_scalar.Rd
 6fef4ccf1053f8f10d28a303d21f143e *man/v_xypair.Rd
 5995abacc4f69e2e4bc4e41c96b1ed2b *tests/testthat.R
 3ee2fcb3e464421142cde43fc257a5f7 *tests/testthat/test-options.R
-3dd265ac3dc471bd257868b0976331a9 *tests/testthat/test-validator.R
+6053358859e1f1d7999cbe88f86a2b39 *tests/testthat/test-validator.R
 af6aafa67e59cb6c58c2018a2336b30b *vignettes/validators.Rmd

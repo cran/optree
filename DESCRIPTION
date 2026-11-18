@@ -1,6 +1,6 @@
 Package: optree
 Title: Hierarchical Runtime Configuration Management
-Version: 0.1.2
+Version: 0.1.3
 Authors@R: 
     person("Bangyou", "Zheng", email = "zheng.bangyou@gmail.com", role = c("aut", "cre"))
 Description: Provides tools for managing nested, multi-level configuration systems with
@@ -11,16 +11,16 @@ Description: Provides tools for managing nested, multi-level configuration syste
     safety through validator functions, and easily reset to their default values when needed.
 License: MIT + file LICENSE
 Encoding: UTF-8
-RoxygenNote: 7.3.3
 Depends: R (>= 4.1.0)
 Suggests: testthat (>= 3.0.0), knitr, rmarkdown
 VignetteBuilder: knitr
 Config/testthat/edition: 3
 URL: https://optree.bangyou.me/, https://github.com/byzheng/optree
 BugReports: https://github.com/byzheng/optree/issues
+Config/roxygen2/version: 8.1.1
 NeedsCompilation: no
-Packaged: 2026-08-20 21:34:47 UTC; zhe00a
+Packaged: 2026-11-18 02:45:33 UTC; zhe00a
 Author: Bangyou Zheng [aut, cre]
 Maintainer: Bangyou Zheng <zheng.bangyou@gmail.com>
 Repository: CRAN
-Date/Publication: 2026-08-21 12:40:14 UTC
+Date/Publication: 2026-11-18 03:50:02 UTC

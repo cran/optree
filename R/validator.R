@@ -227,6 +227,50 @@ v_numeric_vector <- function(min_len = 1, finite = TRUE) {
     }
 }
 
+#' Validator for Character Vectors
+#'
+#' `v_character_vector()` returns a validator function that checks if a value
+#' is a character vector meeting specified length requirements. This is useful
+#' for options requiring character sequences or lists of strings.
+#'
+#' @param min_len Minimum length required for the vector. Defaults to 1.
+#'
+#' @return A validator function that takes a value `x` and raises an error if:
+#'   - `x` is not character
+#'   - `x` has fewer than `min_len` elements
+#'
+#' @export
+#'
+#' @examples
+#' # Create a validator for character vectors of at least length 1
+#' validator <- v_character_vector()
+#'
+#' # Valid input
+#' validator(c("hello"))
+#' validator(c("hello", "world"))
+#'
+#' # Invalid inputs (would raise errors)
+#' try(validator(character(0)))  # too short
+#' try(validator(c(1, 2, 3)))  # not character
+#'
+#' # Create a validator allowing empty vectors
+#' validator_empty <- v_character_vector(min_len = 0)
+#' validator_empty(character(0))  # valid
+v_character_vector <- function(min_len = 1) {
+    if (!is.numeric(min_len) || length(min_len) != 1L || is.na(min_len) || !is.finite(min_len) || min_len < 0 || min_len %% 1 != 0) {
+        stop("min_len must be a single non-negative whole number", call. = FALSE)
+    }
+
+    function(x) {
+        if (!is.character(x)) {
+            stop("must be character", call. = FALSE)
+        }
+        if (length(x) < min_len) {
+            stop(sprintf("length must be >= %d", min_len), call. = FALSE)
+        }
+    }
+}
+
 #' Validator for XY Pair Lists
 #'
 #' `v_xypair()` returns a validator function that checks if a value is a list

@@ -602,6 +602,118 @@ test_that("v_numeric_vector works with create_options_manager", {
     )
 })
 
+test_that("v_character_vector accepts character vectors", {
+    validator <- v_character_vector()
+    expect_silent(validator("hello"))
+    expect_silent(validator(c("hello", "world")))
+    expect_silent(validator(c("a", "b", "c", "d")))
+})
+
+test_that("v_character_vector rejects non-character values", {
+    validator <- v_character_vector()
+    expect_error(
+        validator(123),
+        "must be character"
+    )
+    expect_error(
+        validator(c(1, 2, 3)),
+        "must be character"
+    )
+    expect_error(
+        validator(TRUE),
+        "must be character"
+    )
+    expect_error(
+        validator(list("hello")),
+        "must be character"
+    )
+})
+
+test_that("v_character_vector enforces minimum length by default", {
+    validator <- v_character_vector()
+    expect_error(
+        validator(character(0)),
+        "length must be >= 1"
+    )
+})
+
+test_that("v_character_vector enforces custom minimum length", {
+    validator <- v_character_vector(min_len = 3)
+    expect_silent(validator(c("a", "b", "c")))
+    expect_silent(validator(c("a", "b", "c", "d")))
+    expect_error(
+        validator(c("a", "b")),
+        "length must be >= 3"
+    )
+    expect_error(
+        validator("single"),
+        "length must be >= 3"
+    )
+})
+
+test_that("v_character_vector allows zero-length with min_len = 0", {
+    validator <- v_character_vector(min_len = 0)
+    expect_silent(validator(character(0)))
+    expect_silent(validator("hello"))
+    expect_silent(validator(c("hello", "world")))
+})
+
+test_that("v_character_vector allows empty strings in vectors", {
+    validator <- v_character_vector(min_len = 1)
+    expect_silent(validator(c("hello", "", "world")))
+    expect_silent(validator(""))
+})
+
+test_that("v_character_vector validates min_len argument", {
+    expect_error(
+        v_character_vector(min_len = -1),
+        "min_len must be a single non-negative whole number"
+    )
+    expect_error(
+        v_character_vector(min_len = 1.5),
+        "min_len must be a single non-negative whole number"
+    )
+    expect_error(
+        v_character_vector(min_len = Inf),
+        "min_len must be a single non-negative whole number"
+    )
+    expect_error(
+        v_character_vector(min_len = NA),
+        "min_len must be a single non-negative whole number"
+    )
+})
+
+test_that("v_character_vector works with create_options_manager", {
+    manager <- create_options_manager(
+        defaults = list(
+            tags = c("tag1", "tag2", "tag3"),
+            names = c("alice", "bob")
+        ),
+        validators = list(
+            "tags" = v_character_vector(min_len = 1),
+            "names" = v_character_vector(min_len = 2)
+        )
+    )
+    
+    expect_silent(manager$set(tags = "single_tag"))
+    expect_silent(manager$set(tags = c("new", "tags")))
+    expect_silent(manager$set(names = c("charlie", "diana")))
+    expect_silent(manager$set(names = c("eve", "frank", "grace")))
+    
+    expect_error(
+        manager$set(tags = character(0)),
+        "length must be >= 1"
+    )
+    expect_error(
+        manager$set(names = "only_one"),
+        "length must be >= 2"
+    )
+    expect_error(
+        manager$set(tags = c(1, 2, 3)),
+        "must be character"
+    )
+})
+
 
 
 
